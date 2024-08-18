@@ -1,17 +1,109 @@
 import { DownOutlined } from "@ant-design/icons";
-import { Dropdown } from "antd";
-import React, { useState, useRef } from "react";
+import { Dropdown, Form, Popconfirm, Table } from "antd";
+import React, { useState, useRef, useContext, useEffect } from "react";
 import { dataType, ExpandedDataType } from "../Types/Types";
-import { Checkbox, Badge } from "antd";
-import type { CheckboxOptionType, TableColumnsType } from "antd";
+import { Badge } from "antd";
+import type { TableColumnsType } from "antd";
 import { SearchOutlined } from "@ant-design/icons";
-import type { InputRef, TableColumnType } from "antd";
+import type { InputRef, TableColumnType, GetRef } from "antd";
 import { Button, Input, Space } from "antd";
 import type { FilterDropdownProps } from "antd/es/table/interface";
 import Highlighter from "react-highlight-words";
-import { Table } from "antd-table-ext";
+import { Table as TableExt } from "antd-table-ext";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
 
 type DataIndex = keyof dataType;
+
+type FormInstance<T> = GetRef<typeof Form<T>>;
+
+const EditableContext = React.createContext<FormInstance<any> | null>(null);
+
+interface EditableRowProps {
+  index: number;
+}
+
+const EditableRow: React.FC<EditableRowProps> = ({ index, ...props }) => {
+  const [form] = Form.useForm();
+  return (
+    <Form form={form} component={false}>
+      <EditableContext.Provider value={form}>
+        <tr {...props} />
+      </EditableContext.Provider>
+    </Form>
+  );
+};
+
+interface EditableCellProps {
+  title: React.ReactNode;
+  editable: boolean;
+  dataIndex: keyof dataType;
+  record: dataType;
+  handleSave: (record: dataType) => void;
+}
+
+const EditableCell: React.FC<React.PropsWithChildren<EditableCellProps>> = ({
+  title,
+  editable,
+  children,
+  dataIndex,
+  record,
+  handleSave,
+  ...restProps
+}) => {
+  const [editing, setEditing] = useState(false);
+  const inputRef = useRef<InputRef>(null);
+  const form = useContext(EditableContext)!;
+
+  useEffect(() => {
+    if (editing) {
+      inputRef.current?.focus();
+    }
+  }, [editing]);
+
+  const toggleEdit = () => {
+    setEditing(!editing);
+    form.setFieldsValue({ [dataIndex]: record[dataIndex] });
+  };
+
+  const save = async () => {
+    try {
+      const values = await form.validateFields();
+
+      toggleEdit();
+      handleSave({ ...record, ...values });
+    } catch (errInfo) {
+      console.log("Save failed:", errInfo);
+    }
+  };
+
+  let childNode = children;
+
+  if (editable) {
+    childNode = editing ? (
+      <Form.Item
+        style={{ margin: 0 }}
+        name={dataIndex}
+        rules={[{ required: true, message: `${title} is required.` }]}
+      >
+        <Input ref={inputRef} onPressEnter={save} onBlur={save} />
+      </Form.Item>
+    ) : (
+      <div
+        className="editable-cell-value-wrap"
+        style={{ paddingInlineEnd: 24 }}
+        onClick={toggleEdit}
+      >
+        {children}
+      </div>
+    );
+  }
+
+  return <td {...restProps}>{childNode}</td>;
+};
+
+type EditableTableProps = Parameters<typeof Table>[0];
+
+type ColumnTypes = Exclude<EditableTableProps["columns"], undefined>;
 
 const App: React.FC = () => {
   const [searchText, setSearchText] = useState("");
@@ -99,7 +191,7 @@ const App: React.FC = () => {
       </div>
     ),
     filterIcon: (filtered: boolean) => (
-      <SearchOutlined style={{ color: filtered ? "#1677ff" : undefined }} />
+      <MoreVertIcon style={{ color: filtered ? "#1677ff" : undefined }} /> //three dots from mui-icons
     ),
     onFilter: (value, record) =>
       record[dataIndex]
@@ -124,7 +216,10 @@ const App: React.FC = () => {
       ),
   });
 
-  const columns = [
+  const defaultColumns: (ColumnTypes[number] & {
+    editable?: boolean;
+    dataIndex: string;
+  } & any)[] = [
     /*Column Example init*/
     {
       title: 'מק"ט',
@@ -132,6 +227,7 @@ const App: React.FC = () => {
       key: "makat",
       ...getColumnSearchProps("makat"),
       resizable: true,
+      editable: true,
     },
     {
       title: "אחוזי כשירות כללית",
@@ -139,6 +235,7 @@ const App: React.FC = () => {
       key: "kshirut",
       ...getColumnSearchProps("kshirut"),
       resizable: true,
+      editable: true,
     },
     {
       title: "שם אמצעי",
@@ -146,26 +243,47 @@ const App: React.FC = () => {
       key: "name",
       ...getColumnSearchProps("name"),
       resizable: true,
+      editable: true,
     },
   ];
+  const components = {
+    body: {
+      row: EditableRow,
+      cell: EditableCell,
+    },
+  };
+  const handleSave = (row: dataType) => {
+    const newData = [...dataSource];
+    const index = newData.findIndex((item) => row.key === item.key);
+    const item = newData[index];
+    newData.splice(index, 1, {
+      ...item,
+      ...row,
+    });
+    setDataSource(newData);
+    // add fetch to db if needed
+  };
 
-  const defaultCheckedList = columns.map((item) => item.key as string);
-
-  const [checkedList, setCheckedList] = useState(defaultCheckedList);
+  const columns = defaultColumns.map((col) => {
+    if (!col.editable) {
+      return col;
+    }
+    return {
+      ...col,
+      onCell: (record: dataType) => ({
+        record,
+        editable: col.editable,
+        dataIndex: col.dataIndex,
+        title: col.title,
+        handleSave,
+      }),
+    };
+  });
 
   const items = [
     { key: "1", label: "Action 1" },
     { key: "2", label: "Action 2" },
   ];
-
-  const options = columns.map(({ key, title }) => ({
-    label: title,
-    value: key,
-  }));
-  const newColumns = columns.map((item) => ({
-    ...item,
-    hidden: !checkedList.includes(item.key as string),
-  }));
   const expandedRowRender = () => {
     const columns: TableColumnsType<ExpandedDataType> = [
       { title: "Date", dataIndex: "date", key: "date" },
@@ -205,7 +323,7 @@ const App: React.FC = () => {
     return <Table columns={columns} dataSource={data} pagination={false} />;
   };
 
-  const dataSource: dataType[] = [
+  const [dataSource, setDataSource] = useState<dataType[]>([
     /*Data Example init*/
     {
       key: "1", //uniqe key
@@ -231,24 +349,18 @@ const App: React.FC = () => {
       kshirut: 90,
       name: "karnatz ",
     },
-  ];
+  ]);
 
   return (
     <div className="Pagediv">
       <div className="Tablediv">
-        <Checkbox.Group
-          value={checkedList}
-          options={options as CheckboxOptionType[]}
-          onChange={(value) => {
-            setCheckedList(value as string[]);
-          }}
-        />
-        <Table
-          style={{maxWidth: "500px"}}
-          columns={newColumns}
+        <TableExt
+          style={{ maxWidth: "500px" }}
+          columns={columns as ColumnTypes}
           expandable={{ expandedRowRender, defaultExpandedRowKeys: ["0"] }}
           dataSource={dataSource}
           bordered={true}
+          components={components}
         />
       </div>
     </div>

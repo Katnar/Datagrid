@@ -1,266 +1,185 @@
-import React, { useState, useContext, useEffect, useRef } from "react";
-import { dataType, ExpandedDataType } from "../Types/Types";
-import { Checkbox, Table, Badge } from "antd";
-import type { CheckboxOptionType, TableColumnsType } from "antd";
-import { SearchOutlined } from "@ant-design/icons";
-import type { InputRef, TableColumnType } from "antd";
-import { Button, Input, Space } from "antd";
-import type { FilterDropdownProps } from "antd/es/table/interface";
-import Highlighter from "react-highlight-words";
+import React, { useState } from 'react';
+import type { TableProps } from 'antd';
+import { Form, Input, InputNumber, Popconfirm, Table, Typography } from 'antd';
 
+interface dataType {
+  key: string;
+  name: string;
+  age: number;
+  address: string;
+}
 
-const App: React.FC = () => {
-// ============================Search Filter================================= //
-  const [searchText, setSearchText] = useState("");
-  const [searchedColumn, setSearchedColumn] = useState("");
-  const searchInput = useRef<InputRef>(null); 
-
-  type DataIndex = keyof dataType;
-
-
-  const handleSearch = (
-    selectedKeys: string[],
-    confirm: FilterDropdownProps['confirm'],
-    dataIndex: DataIndex,
-  ) => {
-    confirm();
-    setSearchText(selectedKeys[0]);
-    setSearchedColumn(dataIndex);
-  };
-
-  const handleReset = (clearFilters: () => void) => {
-    clearFilters();
-    setSearchText('');
-  };
-
-  
-  const getColumnSearchProps = (dataIndex: DataIndex): TableColumnType<dataType> => (
-    {
-    filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters, close }) => (
-      <div style={{ padding: 8 }} onKeyDown={(e) => e.stopPropagation()}>
-        <Input
-          ref={searchInput}
-          placeholder={`Search ${dataIndex}`}
-          value={selectedKeys[0]}
-          onChange={(e) => setSelectedKeys(e.target.value ? [e.target.value] : [])}
-          onPressEnter={() => handleSearch(selectedKeys as string[], confirm, dataIndex)}
-          style={{ marginBottom: 8, display: 'block' }}
-        />
-        <Space>
-          <Button
-            type="primary"
-            onClick={() => handleSearch(selectedKeys as string[], confirm, dataIndex)}
-            icon={<SearchOutlined />}
-            size="small"
-            style={{ width: 90 }}
-          >
-            Search
-          </Button>
-          <Button
-            onClick={() => clearFilters && handleReset(clearFilters)}
-            size="small"
-            style={{ width: 90 }}
-          >
-            Reset
-          </Button>
-          <Button
-            type="link"
-            size="small"
-            onClick={() => {
-              confirm({ closeDropdown: false });
-              setSearchText((selectedKeys as string[])[0]);
-              setSearchedColumn(dataIndex);
-            }}
-          >
-            Filter
-          </Button>
-          <Button
-            type="link"
-            size="small"
-            onClick={() => {
-              close();
-            }}
-          >
-            close
-          </Button>
-        </Space>
-        <Checkbox.Group
-        value={pinedList}
-        options={[{label: dataIndex , value: dataIndex}] as CheckboxOptionType[]}
-        onChange={(value) => {
-          setPinedList(value as string[]);
-        }}
-      />
-      </div>
-    ),
-    filterIcon: (filtered: boolean) => ( //define Search Icon
-      <SearchOutlined style={{ color: filtered ? '#1677ff' : undefined }} />
-    ),
-    onFilter: (value, record) =>
-      record[dataIndex]
-        .toString()
-        .toLowerCase()
-        .includes((value as string).toLowerCase()),
-    onFilterDropdownOpenChange: (visible) => {
-      if (visible) {
-        setTimeout(() => searchInput.current?.select(), 100);
-      }
-    },
-    render: (text) =>
-      searchedColumn === dataIndex ? (
-        <Highlighter
-          highlightStyle={{ backgroundColor: '#ffc069', padding: 0 }}
-          searchWords={[searchText]}
-          autoEscape
-          textToHighlight={text ? text.toString() : ''}
-        />
-      ) : (
-        text
-      ),
+const originData: dataType[] = [];
+for (let i = 0; i < 100; i++) {
+  originData.push({
+    key: i.toString(),
+    name: `Edward ${i}`,
+    age: 32,
+    address: `London Park no. ${i}`,
   });
-  // ========================================================================== //
+}
+interface EditableCellProps extends React.HTMLAttributes<HTMLElement> {
+  title: any;
+  editable: boolean;
+  dataIndex: keyof dataType;
+  inputType: 'number' | 'text';
+  record: dataType;
+  index: number;
+  editing: boolean;
+  handleSave: (record: dataType) => void;
+}
 
- // ================================Table Init===================================== //
-
-  const dataSource: dataType[] = [
-    /*Data Example init*/
-    {
-      key: "1", //uniqe key 
-      makat: "123456",
-      kshirut: 32,
-      name: "merkava 4",
-    },
-    {
-      key: "2",
-      makat: "234567",
-      kshirut: 50,
-      name: "karnatz ",
-    },
-    {
-        key: "3",
-        makat: "989768",
-        kshirut: 40,
-        name: "karnatz ",
-      },
-      {
-        key: "4",
-        makat: "412367",
-        kshirut: 90,
-        name: "karnatz ",
-      },
-  ];
-  const columns:TableColumnsType<dataType>  = [
-    /*Column Example init*/
-    {
-      title: 'מק"ט',
-      dataIndex: "makat",
-      key: "makat",
-      ...getColumnSearchProps("makat")
-    },
-    {
-      title: "אחוזי כשירות כללית",
-      dataIndex: "kshirut",
-      key: "kshirut",
-      ...getColumnSearchProps("kshirut")
-    },
-    {
-      title: "שם אמצעי",
-      dataIndex: "name",
-      key: "name",
-      ...getColumnSearchProps("name")
-    },
-    
-    
-  ];
- // ========================================================================== //
-
-  // =============================Column Hiding Features======================= //
-  const defaultCheckedList = columns.map((item) => item.key as string); //default columns (after Init)
-  const [checkedList, setCheckedList] = useState(defaultCheckedList); //state to Check wich Column is on
-
-  const options = columns.map(({ key, title }) => ({
-    // options to hide Columns
-    label: title,
-    value: key,
-  }));
-
-  let newColumns = columns.map((item) => ({
-    //columns to show after hiding
-    ...item,
-    hidden: !checkedList.includes(item.key as string),
-  }));
-  // ========================================================================== //
-
-  // =======================Nested Table Features============================== //
-  const expandedRowRender = () => {
-    const columns: TableColumnsType<ExpandedDataType> = [
-      //Extended Table Columns Example
-      { title: "Date", dataIndex: "date", key: "date" },
-      { title: "Name", dataIndex: "name", key: "name" },
-      {
-        title: "Status",
-        key: "state",
-        render: () => <Badge status="success" text="Finished" />,
-      },
-      { title: "Upgrade Status", dataIndex: "upgradeNum", key: "upgradeNum" },
-    ];
-
-    const data = []; //Extended Table Data Example
-    for (let i = 0; i < 3; ++i) {
-      data.push({
-        key: i.toString(),
-        date: "2014-12-24 23:12:00",
-        name: "This is production name",
-        upgradeNum: "Upgraded: 56",
-      });
-    }
-    return <Table columns={columns} dataSource={data} pagination={false} />; // Extended Table Render
-  };
-  // ========================================================================== //
-
-// ===============================Pin Column================================= //
-  const [pinedList, setPinedList] = useState(defaultCheckedList); //state to Check wich Column is on
-  const PinOptions = columns.map(({ key, title }) => ({
-    // options to hide Columns
-    label: "Pin "+title,
-    value: key,
-  }));
-   newColumns = columns.map((item) => ({ // pin selected column
-    ...item,
-    hidden: !checkedList.includes(item.key as string),
-    fixed: pinedList.includes(item.key as string)
-  }));
-  
-// ========================================================================== //
-
+const EditableCell: React.FC<React.PropsWithChildren<EditableCellProps>> = ({
+  editing,
+  dataIndex,
+  title,
+  inputType,
+  record,
+  index,
+  children,
+  handleSave,
+  editable,
+  ...restProps
+}) => {
+  const inputNode = inputType === 'number' ? <InputNumber /> : <Input />;
 
   return (
-    <div className="Pagediv">
-      <div className="Tablediv">
-      <Checkbox.Group
-        value={checkedList}
-        options={options as CheckboxOptionType[]}
-        onChange={(value) => {
-          setCheckedList(value as string[]);
+    <td {...restProps}>
+      {editing ? (
+        <Form.Item
+          name={dataIndex}
+          style={{ margin: 0 }}
+          rules={[
+            {
+              required: true,
+              message: `Please Input ${title}!`,
+            },
+          ]}
+        >
+          {inputNode}
+        </Form.Item>
+      ) : (
+        children
+      )}
+    </td>
+  );
+};
+
+const App: React.FC = () => {
+  const [form] = Form.useForm();
+  const [data, setData] = useState(originData);
+  const [editingKey, setEditingKey] = useState('');
+
+  const isEditing = (record: dataType) => record.key === editingKey;
+
+  const edit = (record: Partial<dataType> & { key: React.Key }) => {
+    form.setFieldsValue({ name: '', age: '', address: '', ...record });
+    setEditingKey(record.key);
+  };
+
+  const cancel = () => {
+    setEditingKey('');
+  };
+
+  const save = async (key: React.Key) => {
+    try {
+      const row = (await form.validateFields()) as dataType;
+
+      const newData = [...data];
+      const index = newData.findIndex((item) => key === item.key);
+      if (index > -1) {
+        const item = newData[index];
+        newData.splice(index, 1, {
+          ...item,
+          ...row,
+        });
+        setData(newData);
+        setEditingKey('');
+      } else {
+        newData.push(row);
+        setData(newData);
+        setEditingKey('');
+      }
+    } catch (errInfo) {
+      console.log('Validate Failed:', errInfo);
+    }
+  };
+
+  const columns = [
+    {
+      title: 'name',
+      dataIndex: 'name',
+      width: '25%',
+      editable: true,
+    },
+    {
+      title: 'age',
+      dataIndex: 'age',
+      width: '15%',
+      editable: true,
+    },
+    {
+      title: 'address',
+      dataIndex: 'address',
+      width: '40%',
+      editable: true,
+    },
+    {
+      title: 'operation',
+      dataIndex: 'operation',
+      render: (_: any, record: dataType) => {
+        const editable = isEditing(record);
+        return editable ? (
+          <span>
+            <Typography.Link onClick={() => save(record.key)} style={{ marginInlineEnd: 8 }}>
+              Save
+            </Typography.Link>
+            <Popconfirm title="Sure to cancel?" onConfirm={cancel}>
+              <a>Cancel</a>
+            </Popconfirm>
+          </span>
+        ) : (
+          <Typography.Link disabled={editingKey !== ''} onClick={() => edit(record)}>
+            Edit
+          </Typography.Link>
+        );
+      },
+    },
+  ];
+
+  const mergedColumns: TableProps<dataType>['columns'] = columns.map((col) => {
+    if (!col.editable) {
+      return col;
+    }
+    return {
+      ...col,
+      onCell: (record: dataType) => ({
+        record,
+        inputType: col.dataIndex === 'age' ? 'number' : 'text',
+        dataIndex: col.dataIndex,
+        title: col.title,
+        editing: isEditing(record),
+      }),
+    };
+  });
+
+  return (
+    <Form form={form} component={false}>
+      <Table
+        components={{
+          body: {
+            cell: EditableCell,
+          },
+        }}
+        bordered
+        dataSource={data}
+        columns={mergedColumns}
+        rowClassName="editable-row"
+        pagination={{
+          onChange: cancel,
         }}
       />
-      <Checkbox.Group
-        value={pinedList}
-        options={PinOptions as CheckboxOptionType[]}
-        onChange={(value) => {
-          setPinedList(value as string[]);
-        }}
-      />
-        <Table
-        style={{maxWidth: "500px"}}
-          dataSource={dataSource}
-          columns={newColumns}
-          expandable={{ expandedRowRender, defaultExpandedRowKeys: ["0"] }}
-          scroll={{ x:true , y:"max-content" }}
-          bordered={true}
-        />
-      </div>
-    </div>
+    </Form>
   );
 };
 
