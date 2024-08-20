@@ -19,14 +19,12 @@ for (let i = 0; i < 100; i++) {
   });
 }
 interface EditableCellProps extends React.HTMLAttributes<HTMLElement> {
+  editing: boolean;
+  dataIndex: string;
   title: any;
-  editable: boolean;
-  dataIndex: keyof dataType;
   inputType: 'number' | 'text';
   record: dataType;
   index: number;
-  editing: boolean;
-  handleSave: (record: dataType) => void;
 }
 
 const EditableCell: React.FC<React.PropsWithChildren<EditableCellProps>> = ({
@@ -37,8 +35,6 @@ const EditableCell: React.FC<React.PropsWithChildren<EditableCellProps>> = ({
   record,
   index,
   children,
-  handleSave,
-  editable,
   ...restProps
 }) => {
   const inputNode = inputType === 'number' ? <InputNumber /> : <Input />;

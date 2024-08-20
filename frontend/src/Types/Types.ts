@@ -1,3 +1,6 @@
+import type {GetRef} from "antd";
+import { Form, Table } from "antd";
+
 export type Column = {
   title: string; //Title of the colomns that will be displayed for the user
   dataIndex: string; //Index to refer the specific object Key inside DataSource
@@ -16,8 +19,35 @@ export type dataType = {
 };
 
 export type ExpandedDataType = {
-    key: React.Key;
-    date: string;
-    name: string;
-    upgradeNum: string;
-  }
+  key: React.Key;
+  date: string;
+  name: string;
+  upgradeNum: string;
+};
+
+export type DataIndex = keyof dataType;
+
+export type FormInstance<T> = GetRef<typeof Form<T>>;
+
+export interface EditableRowProps {
+  index: number;
+}
+export interface EditableCellProps {
+  title: React.ReactNode;
+  editable: boolean;
+  dataIndex: keyof dataType;
+  record: dataType;
+  handleSave: (record: dataType) => void;
+}
+
+export interface EditableRowProps extends React.HTMLAttributes<HTMLElement> {
+  editing: boolean;
+  dataIndex: string;
+  title: any;
+  inputType: 'number' | 'text';
+  record: dataType;
+  index: number;
+}
+export type EditableTableProps = Parameters<typeof Table>[0];
+
+export type ColumnTypes = Exclude<EditableTableProps["columns"], undefined>;
