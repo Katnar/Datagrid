@@ -6,4 +6,80 @@
   align-items: center;
   width: 100%;
   height: 100%;
+  flex-direction: column;
+}
+
+
+.FilterCard{
+  display: flex;
+  flex-direction: row;
+  height: 16rem;
+  width: 100%;
+  border-width: 2px;
+  border-style: groove;
+  border-radius: 20px;
+  gap: 25px;
+  background-color: whitesmoke;
+  box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
+  z-index: 2;
+  flex-wrap: wrap;
+  flex: 1 1 auto;
+}
+
+
+.ant-checkbox-checked .ant-checkbox-inner {
+  background-color: #FF474F !important;
+  border-color: #FF474F;
+}
+.ant-checkbox-wrapper:hover .ant-checkbox-checked .ant-checkbox-inner {
+  background-color: #FF474F !important;
+  border-color: #FF474F !important;
+}
+.ant-checkbox-checked:hover .ant-checkbox-checked .ant-checkbox-inner {
+  background-color: #FF474F !important;
+  border-color: #FF474F !important;
+}
+.ant-checkbox-checked:after {
+  border-color: #FF474F !important;
+}
+.ant-checkbox:hover::after {
+  border-color: #FF474F !important;
+}
+.ant-checkbox:hover .ant-checkbox-inner {
+  border-color: #FF474F !important;
+}
+.ant-checkbox-indeterminate .ant-checkbox-inner::after {
+  background-color: #FF474F !important;
+}
+.ant-table-row-expand-icon-collapsed {
+  border-color: #FF474F !important;
+  color:#FF474F !important;
+}
+/* Change the color of the collapse icon (expanded state) */
+.ant-table-row-expand-icon-expanded {
+  border-color: #FF474F !important;
+  color:#FF474F !important;
+}
+.ant-pagination-item {
+  color: #FF474F !important; /* Default text color */
+  border-color: #FF474F !important; /* Default border color */
+}
+
+/* Style for the first pagination item (item 1) */
+.ant-pagination-item-1 {
+  color: #FF474F !important; /* Set text color for item 1 */
+  border-color: #FF474F !important; /* Set border color for item 1 */
+}
+
+/* Change text color and border on hover for pagination items */
+.ant-pagination-item:hover {
+  color: #FF474F !important;  /* Set hover text color */
+  border-color: #FF474F !important; /* Set hover border color */
+}
+
+a {
+  color: #FF474F !important
+}
+.ant-table-content{
+  scrollbar-width: thin;
 }

@@ -44,3 +44,7 @@ You don’t have to ever use `eject`. The curated feature set is suitable for sm
 You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
 
 To learn React, check out the [React documentation](https://reactjs.org/).
+
+//width: number | string (example: width:50) שימו לב שההגדרות נשמרות במאגר לוקלי בשביל להחל שינוי ניתן לרוקן את המאגר הלוקלי ולהפעיל מחדש את העמוד
+
+// style={{ maxWidth: "500px" }} //max width will not allow resizable to work properly add scroll option to prevent unwanted resault

@@ -1,6 +1,8 @@
 import React from "react";
 import { Form, Input, InputNumber } from "antd";
 import { EditableRowProps, dataType } from "../Types/Types";
+import { AutoComplete, Flex, DatePicker } from "antd";
+import type { AutoCompleteProps, DatePickerProps } from "antd";
 
 export const EditableCellRow: React.FC<
   React.PropsWithChildren<EditableRowProps>
@@ -14,8 +16,20 @@ export const EditableCellRow: React.FC<
   children,
   ...restProps
 }) => {
-  const inputNode = inputType === "number" ? <InputNumber /> : <Input />;
+  const getInputNode = () => {
+    switch (restProps.cellEditType) {
+      case "1":
+        return <Input />;
+      case "2":
+        return <AutoComplete options={[]} />;
+      case "3":
+        return <DatePicker />;
 
+      default:
+        return <Input />;
+    }
+  };
+  const inputNode = inputType === "number" ? <InputNumber /> : <Input />;
   return (
     <td {...restProps}>
       {editing ? (
