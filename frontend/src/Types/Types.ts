@@ -60,6 +60,7 @@ export type ColumnTypes = Exclude<EditableTableProps["columns"], undefined>;
 export type OnChange = NonNullable<TableProps<dataType>['onChange']>;
 export type GetSingle<T> = T extends (infer U)[] ? U : never;
 export type Sorts = GetSingle<Parameters<OnChange>[2]>;
+export type Filters = Parameters<OnChange>[1];
 
 export type TableRowSelection<T extends object = object> = TableProps<T>['rowSelection'];
 

@@ -95,7 +95,7 @@ export const EditableCell: React.FC<
             <AutoComplete
               popupClassName="certain-category-search-dropdown"
               popupMatchSelectWidth={150}
-              style={{ width: 120 }}
+              style={{ display:'flex', width: 120, height:32.19, alignContent:'center' }}
               options={options}
               size="large"
               defaultValue={record[dataIndex]}
@@ -174,7 +174,7 @@ const options = [
   {
     label: <Title title="כלים" />,
     options: [
-      renderItem("Metkava 4"),
+      renderItem("Merkava 4"),
       renderItem("Karnatz"),
       renderItem("barkan"),
       renderItem("vazir"),

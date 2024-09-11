@@ -22,7 +22,6 @@ import ButtonGroup from "@mui/material/ButtonGroup";
 
 
 const Table: React.FC = () => {
-  const [refreshKey, setRefreshKey] = useState(0);
   const [filterCard, setFilterCard] = useState(false);
   const { sortedInfo, setSortedInfo } = useContext(SortContext);
   const [searchText, setSearchText] = useState("");
@@ -100,15 +99,18 @@ const Table: React.FC = () => {
       title: "שם אמצעי",
       dataIndex: "name",
       key: "name",
-      ...getColumnSearchProps(
-        "name",
-        searchInput,
-        setSearchedColumn,
-        setSearchText
-      ),
       resizable: true,
       editable: true,
       cellEditType: "2",
+      filters: [
+        { text: 'Merkava 4', value: 'Merkava 4' },
+        { text: 'Karnatz', value: 'Karnatz' },
+        { text: 'barkan', value: 'barkan' },
+        { text: 'vazir', value: 'vazir' },
+        { text: 'yoav', value: 'yoav' },
+        { text: 'katzar', value: 'katzar' },
+      ],
+      onFilter: (value:any, record:any) => record.name.includes(value as string),
     },
     {
       title: "תאריך",
@@ -195,10 +197,20 @@ const Table: React.FC = () => {
     hidden: !checkedList.includes(item.key as string),
   }));
   //===================================================================================//
-  const columnsWithFixed = ColumnsAfterHidden.map((col) => {
-    const fixedColumn = fixedColumns.find((c) => c.key === col.key);
-    return fixedColumn ? { ...col, currentFixed: fixedColumn.fixed } : col;
+  const reorderColumns = (columns: any[]) => {
+    const fixedLeft = columns.filter(col => col.currentFixed === 'left');
+    const fixedRight = columns.filter(col => col.currentFixed === 'right');
+    const nonFixed = columns.filter(col => !col.currentFixed);
+    return [...fixedLeft, ...nonFixed, ...fixedRight];
+  };
+  // Update fixed columns and reorder them
+
+  const columnsWithFixed = defaultColumns.map(col => {
+    const fixedCol = fixedColumns.find(fCol => fCol.key === col.key);
+    return fixedCol ? { ...col, currentFixed: fixedCol.fixed } : col;
   });
+  const reorderedColumns = reorderColumns(columnsWithFixed);
+
   const handleSave = (row: dataType) => {
     const newData = [...dataSource];
     const index = newData.findIndex((item) => row.key === item.key);
@@ -210,7 +222,7 @@ const Table: React.FC = () => {
     setDataSource(newData);
     // add fetch to db if needed
   };
-  const columns: TableProps<dataType>["columns"] = columnsWithFixed.map(
+  const columns: TableProps<dataType>["columns"] = reorderedColumns.map(
     (col) => {
       if (!col.editable) {
         return col;
@@ -228,7 +240,7 @@ const Table: React.FC = () => {
       };
     }
   );
-  const mergedColumns: TableProps<dataType>["columns"] = columnsWithFixed.map(
+  const mergedColumns: TableProps<dataType>["columns"] = reorderedColumns.map(
     (col) => {
       if (!col.editable) {
         return col;
